@@ -1,0 +1,14 @@
+# Build output
+build/
+app
+
+# VSCode
+.vscode/
+
+# Linux
+*.o
+*.out
+
+# Misc
+.DS_Store
+
