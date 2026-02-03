@@ -1,21 +1,118 @@
-# 2D Kinematics & Time Integration Simulator
+# 2D Dynamics – Force, Mass & Numerical Integration
 
-A deterministic 2D kinematic simulator written in **C++ using Raylib**, designed to explore **numerical integration methods** commonly used in robotics, autonomous systems, and aerospace simulation.
+A deterministic **2D dynamics simulator** written in **C++ using Raylib**, focused on modeling **force-based motion**, **mass effects**, and **numerical integration stability**.
 
-The project allows **runtime comparison** between different integrators and includes a **stress mode** to visually highlight numerical stability differences.
+This project extends a previous kinematics-only simulator into a **Newtonian dynamics model**, making acceleration an emergent property derived from forces rather than a direct input. It also provides real-time visual feedback to compare different integration methods under stress.
 
 ---
 
-## 🎯 Features
+## 🎯 Project Goals
 
-- Fixed-step simulation loop (deterministic)
-- Semi-implicit Euler integrator
-- Second-order Runge–Kutta (RK2 / Midpoint) integrator
-- Runtime integrator switching
-- Stress mode with increased timestep
-- Acceleration-based inertial motion
-- Trajectory trail visualization
-- Clean separation between simulation and rendering
+- Model **force → acceleration → velocity → position** correctly
+- Compare numerical integration methods (Euler vs RK2)
+- Visualize physical quantities (force, acceleration, energy)
+- Expose numerical instability using controlled timestep stress
+- Keep a clean, modular simulation architecture
+
+This project is designed as a learning and demonstration tool for **physics simulation**, **robotics**, and **aerospace/GNC fundamentals**.
+
+---
+
+## 🧱 Architecture Overview
+
+The simulator is intentionally split into clear, independent modules:
+
+- State → Physical state (data only)
+- Dynamics → Force resolution (physics laws)
+- Integrator → Numerical integration
+- Renderer → Visualization & HUD
+- Main Loop → Orchestration & input
+
+
+### Key Design Principle
+
+> **The integrator never computes forces.**  
+> **The dynamics module never updates position.**
+
+This separation mirrors real-world simulation and control software.
+
+---
+
+## ⚙️ Physical Model
+
+- **Input** applies a force vector
+- **Acceleration** is computed using Newton’s second law: 
+```
+a = F / m
+ ```
+
+- **Linear drag** is applied as a resistive force:
+```
+F_drag = -k · v
+ ```
+
+- Motion exhibits inertia, damping, and mass-dependent response
+
+---
+
+## 🔬 Numerical Integrators
+
+### Euler (Semi-Implicit)
+- First-order method
+- Very fast and simple
+- Accumulates numerical error quickly
+- Becomes unstable with larger timesteps
+
+### RK2 (Midpoint)
+- Second-order Runge–Kutta method
+- Evaluates system state at the midpoint of the timestep
+- Improved stability and energy behavior
+- Still computationally inexpensive
+
+Integrators can be switched **at runtime**.
+
+---
+
+## ⚠️ Stress Mode
+
+Stress Mode intentionally increases the simulation timestep to highlight numerical instability.
+
+| Mode | Simulation Timestep |
+|----|----|
+| Normal | 100 Hz |
+| Stress | 25 Hz |
+
+Under stress conditions:
+- Euler shows drift, overshoot, and energy gain
+- RK2 maintains smoother and more stable motion
+
+This mode exists purely to **make numerical behavior visible**.
+
+---
+
+## 🎨 Visual Feedback
+
+The simulator uses multiple visual cues to communicate physical behavior:
+
+### Vectors
+- **Yellow vector** → Applied force (input)
+- **Red vector** → Resulting acceleration
+
+### Trajectory Trail
+Trail color changes depending on motion regime:
+- **Green** → Active acceleration
+- **Blue** → Inertial coasting
+- **Red** → Braking / drag-dominated motion
+
+### HUD
+- Position and velocity
+- Current integrator
+- Timestep and stress mode
+- Mass value
+- Kinetic energy
+- FPS
+
+These visuals allow the system’s physics to be understood **without reading code**.
 
 ---
 
@@ -23,7 +120,8 @@ The project allows **runtime comparison** between different integrators and incl
 
 | Key | Action |
 |---|---|
-| **W A S D** | Apply acceleration |
+| **W A S D** | Apply force |
+| **↑ / ↓** | Increase / decrease mass |
 | **1** | Switch to Euler integrator |
 | **2** | Switch to RK2 integrator |
 | **T** | Toggle Stress Mode |
@@ -32,73 +130,35 @@ The project allows **runtime comparison** between different integrators and incl
 
 ---
 
-## 🔬 Integrators
+## 🛠️ Build & Run
 
-### Euler (Semi-Implicit)
-A first-order integration method that updates velocity before position.
-
-- Very fast
-- Simple to implement
-- Accumulates numerical error more quickly
-- Becomes unstable with larger timesteps
-
-### RK2 (Midpoint)
-A second-order Runge–Kutta method that evaluates system behavior at the midpoint of the timestep.
-
-- Improved numerical accuracy
-- Better stability under stress
-- Reduced error accumulation
-- Still computationally inexpensive
-
----
-
-## ⚠️ Stress Mode
-
-Stress Mode intentionally increases the simulation timestep to make numerical errors visible.
-
-- **Normal Mode**: 100 Hz timestep  
-- **Stress Mode**: 25 Hz timestep  
-
-Under stress conditions:
-- Euler exhibits visible drift and instability
-- RK2 maintains smoother and more stable trajectories
-
-This mode exists purely to demonstrate numerical behavior differences.
-
----
-
-## 🧠 Architecture
-
-
-The simulation logic is fully decoupled from rendering, making the system suitable for:
-- Headless simulation
-- Offline analysis
-- Monte Carlo experiments
-- Future control and dynamics extensions
-
----
-
-## 🔧 Build & Run (Linux)
-
-### Dependencies
-- g++
+### Requirements
+- Linux
+- C++17 compiler (g++ or clang)
 - Raylib
 
-### Build
+### Build (example)
 ```bash
-g++ -Isrc $(find src -name '*.cpp') -o app -std=c++17 \
-    -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+mkdir -p build
+g++ -Isrc $(find src -name '*.cpp') -o build/app \
+  -std=c++17 -Wall -Wextra \
+  -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 ```
+
 ### Run
-./app
+```bash
+./build/app
+```
 
-## 🚀 Motivation
+### 📚 Background & Motivation
 
-This project serves as a foundation for further exploration into:
+- This project is part of a progressive simulation series:
+- 2D Kinematics – Position, velocity, time integration
+- 2D Dynamics (this project) – Force, mass, drag
+- Orbital Motion & Energy Preservation (planned)
+- Control Systems & Estimation (planned)
+- The focus is not visual fidelity, but numerical correctness, clarity, and engineering structure.
 
-- Numerical integration methods
-- Autonomous navigation
-- Guidance, Navigation & Control (GNC)
-- Robotics and aerospace simulation
-- Control systems (PID, tracking)
-- Physics-based dynamics
+### 📜 License
+
+This project is provided for educational and demonstration purposes.

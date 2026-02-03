@@ -9,5 +9,8 @@ struct State
     Vector2 Velocity{0.0f, 0.0f};
     Vector2 Acceleration{0.0f, 0.0f};
 
+    Vector2 Force{0.0f, 0.0f};
+    float Mass = 1.0f;
+
     std::vector<Vector2> Trail;
 };

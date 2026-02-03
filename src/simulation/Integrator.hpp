@@ -8,6 +8,8 @@ enum class IntegratorType
     RK2
 };
 
+// Integrator operates on acceleration only.
+// All forces are resolved beforehand by the Dynamics module.
 class Integrator
 {
 public:

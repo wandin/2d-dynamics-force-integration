@@ -3,6 +3,7 @@
 #include "render/Renderer.hpp"
 #include "simulation/State.hpp"
 #include "simulation/Integrator.hpp"
+#include "simulation/Dynamics.hpp"
 
 constexpr int WINDOW_WIDTH = 1920;
 constexpr int WINDOW_HEIGHT = 1080;
@@ -56,14 +57,21 @@ int main()
         if (IsKeyDown(KEY_S)) inputDir.y += 1.0f;
         if (IsKeyDown(KEY_A)) inputDir.x -= 1.0f;
         if (IsKeyDown(KEY_D)) inputDir.x += 1.0f;
+        if (IsKeyPressed(KEY_DOWN))
+        {
+            state.Mass = std::max(0.1f, state.Mass - 0.2f);
+        }
+        if (IsKeyPressed(KEY_UP))
+        {
+            state.Mass += 0.2f;
+        }   
 
         if(IsKeyDown(KEY_R))
          {
             //Stop movement
-            state.Acceleration.x = 0.0f;
-            state.Acceleration.y = 0.0f;
-            state.Velocity.x = 0.0f;
-            state.Velocity.y = 0.0f;
+            state.Force = {0.0f, 0.0f};
+            state.Velocity = {0.0f, 0.0f};
+            state.Acceleration = {0.0f, 0.0f};
             //Center object
             state.Position.x = WINDOW_WIDTH * 0.5f;
             state.Position.y = WINDOW_HEIGHT * 0.5f;
@@ -84,13 +92,14 @@ int main()
 
         float simulationDt = StressMode ? (1.0f / 25.0f) : FixedDeltaTime;
 
-        constexpr float Acceleration = 400.0f;
-        state.Acceleration = Vector2Scale(inputDir, Acceleration);
+        constexpr float InputForce = 800.0f;
+        state.Force = Vector2Scale(inputDir, InputForce);
 
-        while (accumulator >= FixedDeltaTime)
+        while (accumulator >= simulationDt)
         {
+            Dynamics::ComputeAcceleration(state, /*DragEnabled=*/true);
             Integrator::Step(state, simulationDt, CurrentIntegrator);
-            accumulator -= FixedDeltaTime;
+            accumulator -= simulationDt;
         }
 
         state.Trail.push_back(state.Position);
